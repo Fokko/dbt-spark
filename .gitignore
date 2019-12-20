@@ -8,3 +8,4 @@ dist/
 
 .idea/
 dbt-integration-tests/
+test/integration/.user.yml

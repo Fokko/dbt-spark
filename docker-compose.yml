@@ -1,0 +1,38 @@
+version: "3"
+
+services:
+  hive:
+    image: fokko
+    entrypoint: /init-hive.sh
+    ports:
+      - "9083:9083"
+      - "10000:10000"
+    links:
+      - "postgres:postgres"
+
+  spark:
+    image: fokko
+    entrypoint: /init-spark.sh
+    ports:
+      - "10001:10001"
+    links:
+      - "postgres:postgres"
+      - "hive:hive"
+
+  postgres:
+    image: postgres:10
+    environment:
+      - POSTGRES_USER=hive
+      - POSTGRES_DB=metastore
+
+  ci:
+    entrypoint: bash
+    image: python:3.7
+    stdin_open: true
+    tty: true
+    links:
+      - "spark:spark"
+      - "hive:hive"
+    volumes:
+      - .:/dbt/
+    working_dir: /dbt/

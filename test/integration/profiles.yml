@@ -12,3 +12,19 @@ spark:
       cluster: '{{ env_var("SPARK_CLUSTER") }}'
       connect_timeout: 30
       connect_retries: 10
+
+local:
+  target: ci
+  outputs:
+    ci:
+      type: spark
+      method: thrift
+      schema: 'default'
+      host: 'spark'
+      port: 10000
+      user: hive
+      connect_timeout: 30
+      connect_retries: 10
+
+config:
+  send_anonymous_usage_stats: False

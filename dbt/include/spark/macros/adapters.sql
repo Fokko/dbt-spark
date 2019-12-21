@@ -151,6 +151,8 @@
 
 {% macro spark__reset_csv_table(model, full_refresh, old_relation) %}
     {% if old_relation %}
+        -- Truncate it first, so we're sure that the data is gone
+        {{ adapter.truncate_relation(old_relation) }}
         {{ adapter.drop_relation(old_relation) }}
     {% endif %}
     {% set sql = create_csv_table(model) %}

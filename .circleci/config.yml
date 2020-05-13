@@ -8,7 +8,7 @@ jobs:
           DBT_INVOCATION_ENV: circle
     steps:
       - checkout
-      - run: tox -e flake8,unit
+      - run: tox -e flake8,unit,mypy
 
   integration-spark2:
     docker:

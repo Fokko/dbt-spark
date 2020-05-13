@@ -1,64 +1,21 @@
-version: 2
+version: 2.1
+
+orbs:
+  python: circleci/python@0.2.1
 
 jobs:
-  unit:
-    docker:
-      - image: fishtownanalytics/test-container:6
-        environment:
-          DBT_INVOCATION_ENV: circle
+  build-and-test:
+    executor: python/default
     steps:
       - checkout
-      - run: tox -e flake8,unit
-
-  integration-spark2:
-    docker:
-
-      - image: fishtownanalytics/test-container:6
-        environment:
-          DBT_INVOCATION_ENV: circle
-
-      - image: godatadriven/spark:2
-        environment:
-          WAIT_FOR: localhost:5432
-        command: >
-          --class org.apache.spark.sql.hive.thriftserver.HiveThriftServer2
-          --name Thrift JDBC/ODBC Server
-          --conf spark.hadoop.javax.jdo.option.ConnectionURL=jdbc:postgresql://localhost/metastore
-          --conf spark.hadoop.javax.jdo.option.ConnectionUserName=dbt
-          --conf spark.hadoop.javax.jdo.option.ConnectionPassword=dbt
-          --conf spark.hadoop.javax.jdo.option.ConnectionDriverName=org.postgresql.Driver
-
-      - image: postgres:9.6.17-alpine
-        environment:
-          POSTGRES_USER: dbt
-          POSTGRES_PASSWORD: dbt
-          POSTGRES_DB: metastore
-
-    steps:
-      - checkout
-
+      - python/load-cache
+      - python/install-deps
+      - python/save-cache
       - run:
-          name: Wait for Spark-Thrift
-          command: dockerize -wait tcp://localhost:10000 -timeout 15m -wait-retry-interval 5s
-
-      - run:
-          name: Checkout test project
-          command: git clone --branch spark-support https://github.com/fishtown-analytics/dbt-integration-tests.git
-      - run:
-          name: Run integration tests
-          command: tox -e integration-spark-thrift
-          no_output_timeout: 1h
-          environment:
-              DBT_PROFILES_DIR: /home/dbt_test_user/project/test/integration/
-
-      - store_artifacts:
-          path: ./logs
+          command: ./manage.py test
+          name: Test
 
 workflows:
-  version: 2
-  test-everything:
+  main:
     jobs:
-      - unit
-      - integration-spark2:
-          requires:
-            - unit
+      - build-and-test
